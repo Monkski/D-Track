@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769aa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="D-Track">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>D-Track</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17324d;background:#f3f7fa}
+*{box-sizing:border-box}body{margin:0;background:#f3f7fa}
+header{background:#1769aa;color:#fff;padding:15px 16px calc(13px + env(safe-area-inset-top));position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:24px}.sub{font-size:12px;opacity:.9;margin-top:2px}
+main{max-width:700px;margin:auto;padding:12px 12px calc(90px + env(safe-area-inset-bottom))}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+nav button,.secondary{min-height:44px;border:0;border-radius:10px;background:#dceaf5;color:#17324d;font-weight:700;padding:8px}
+nav button.active{background:#1769aa;color:#fff}
+.card{background:#fff;border-radius:14px;padding:15px;margin:10px 0;box-shadow:0 1px 5px #0001}
+h2{font-size:19px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 5px}
+input,textarea{width:100%;min-height:44px;padding:10px;border:1px solid #c7d3dc;border-radius:9px;background:#fff;color:#17324d;font-size:17px}
+textarea{min-height:82px}.full{grid-column:1/-1}
+.primary{width:100%;min-height:48px;border:0;border-radius:11px;background:#1769aa;color:#fff;font-size:17px;font-weight:800}
+.section-title{font-weight:800;margin:3px 0 10px}.muted{font-size:13px;color:#657987}
+details{border-top:1px solid #e5ebef;margin-top:14px;padding-top:12px}summary{font-weight:800;cursor:pointer;min-height:44px;padding:10px 0}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 5px;border-bottom:1px solid #e4eaee;text-align:left;white-space:nowrap}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.danger{background:#f6e5e5}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat div{background:#f1f6fa;border-radius:10px;padding:11px}.stat b{display:block;font-size:19px;margin-top:3px}
+canvas{width:100%;height:230px;border:1px solid #e0e7ec;border-radius:10px;background:#fff}
+.notice{font-size:12px;line-height:1.45;color:#5d7180}.hidden{display:none}
+.toast{position:fixed;left:12px;right:12px;bottom:15px;padding:12px;background:#17324d;color:#fff;border-radius:10px;text-align:center;display:none;z-index:30}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.full{grid-column:auto}nav button{font-size:12px;padding:7px 2px}header{padding-top:calc(12px + env(safe-area-inset-top))}}
+</style>
+</head>
+<body>
+<header><h1>D-Track</h1><div class="sub">Dialysis session record</div></header>
+<main>
+<nav aria-label="Main navigation">
+<button data-page="home" class="active">Home</button>
+<button data-page="form">+ Session</button>
+<button data-page="sessions">Sessions</button>
+<button data-page="stats">Trends</button>
+</nav>
+
+<section id="home" class="page">
+<div class="card">
+<h2>New dialysis session</h2>
+<p class="muted">Enter the key readings first. Additional machine information is available below.</p>
+<button class="primary" id="newBtn">+ Start new session</button>
+</div>
+<div class="card"><h2>Recent sessions</h2><div id="recent"></div></div>
+<div class="card notice">D-Track is a personal record-keeping tool. It does not diagnose conditions or replace advice from your dialysis team.</div>
+</section>
+
+<section id="form" class="page hidden">
+<div class="card">
+<div class="row"><h2 id="formTitle">New session</h2><button class="secondary" type="button" id="cancelBtn">Cancel</button></div>
+<form id="sessionForm">
+<input type="hidden" id="editId">
+<div class="section-title">Session</div>
+<div class="grid">
+<div><label for="date">Date</label><input id="date" type="date" required></div>
+<div><label for="time">Dialysis time</label><input id="time" type="time"></div>
+<div><label for="preWeight">Pre-weight (kg)</label><input id="preWeight" inputmode="decimal"></div>
+<div><label for="dryWeight">Dry weight (kg)</label><input id="dryWeight" inputmode="decimal"></div>
+<div><label for="removeTarget">Remove to target weight (kg)</label><input id="removeTarget" inputmode="decimal"></div>
+<div><label for="targetFluid">Targeted fluid removal (L)</label><input id="targetFluid" inputmode="decimal"></div>
+</div>
+
+<details open><summary>Blood pressure</summary>
+<div class="grid">
+<div><label for="preBP">Pre-BP</label><input id="preBP" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="159/91"></div>
+<div><label for="prePulse">Pulse</label><input id="prePulse" inputmode="numeric"></div>
+<div><label for="postBP">Post-BP</label><input id="postBP" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="142/78"></div>
+<div><label for="postPulse">Post-pulse</label><input id="postPulse" inputmode="numeric"></div>
+</div>
+</details>
+
+<details><summary>Fluid & machine readings</summary>
+<div class="grid">
+<div><label for="actualFluid">Actual fluid removal (L)</label><input id="actualFluid" inputmode="decimal"></div>
+<div><label for="litres">Litres processed (L)</label><input id="litres" inputmode="decimal"></div>
+<div><label for="pump">Pump speed</label><input id="pump" inputmode="numeric"></div>
+<div><label for="venous">Venous pressure (P)</label><input id="venous" inputmode="numeric"></div>
+<div><label for="arterial">Arterial pressure (P)</label><input id="arterial" inputmode="numeric"></div>
+<div><label for="tmp">TMP</label><input id="tmp" inputmode="numeric"></div>
+</div>
+</details>
+
+<details><summary>Other</summary>
+<div class="grid">
+<div><label for="disinfection">Disinfection</label><input id="disinfection"></div>
+<div><label for="ro">RO cleaning</label><input id="ro"></div>
+<div class="full"><label for="comments">Comments</label><textarea id="comments"></textarea></div>
+</div>
+</details>
+<br><button class="primary" type="submit">SAVE SESSION</button>
+</form>
+</div>
+</section>
+
+<section id="sessions" class="page hidden">
+<div class="card"><div class="row"><h2>Sessions</h2><button class="secondary" id="addBtn">+ New</button></div>
+<div style="overflow:auto"><table><thead><tr><th>Date</th><th>Pre kg</th><th>Pre BP</th><th>Post BP</th><th>Fluid L</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="card"><h2>Backup</h2><p class="muted">Export a copy of your D-Track records as a JSON file. Import it on another device to restore them.</p>
+<div class="actions"><button class="secondary" id="exportBtn">Export backup</button><button class="secondary" id="importBtn">Import backup</button></div>
+<input id="fileInput" type="file" accept=".json,application/json" hidden>
+</div>
+</section>
+
+<section id="stats" class="page hidden">
+<div class="card"><h2>Trends</h2><div class="stat" id="statBox"></div></div>
+<div class="card"><h2>Blood pressure</h2><canvas id="bpChart"></canvas></div>
+<div class="card"><h2>Weight</h2><canvas id="weightChart"></canvas></div>
+<div class="card"><h2>Fluid removal</h2><canvas id="fluidChart"></canvas></div>
+</section>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const fields=['date','time','preWeight','dryWeight','removeTarget','targetFluid','preBP','prePulse','postBP','postPulse','actualFluid','litres','pump','venous','arterial','tmp','disinfection','ro','comments'];
+let sessions=[];
+try{sessions=JSON.parse(localStorage.getItem('dtrack_sessions')||'[]');if(!Array.isArray(sessions))sessions=[];}catch(e){sessions=[];}
+
+function today(){return new Date().toISOString().slice(0,10)}
+function save(){localStorage.setItem('dtrack_sessions',JSON.stringify(sessions))}
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2200)}
+function showPage(id){
+ document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
+ $(id).classList.remove('hidden');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+ if(id==='home')renderRecent(); if(id==='sessions')renderSessions(); if(id==='stats')renderStats();
+ window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+$('newBtn').addEventListener('click',()=>newSession());
+$('addBtn').addEventListener('click',()=>newSession());
+$('cancelBtn').addEventListener('click',()=>showPage('home'));
+
+function newSession(){
+ $('sessionForm').reset();$('editId').value='';$('formTitle').textContent='New session';$('date').value=today();showPage('form');
+}
+function formatBP(el){
+ let d=el.value.replace(/\D/g,'').slice(0,5);
+ el.value=d.length>3?d.slice(0,3)+'/'+d.slice(3):d;
+}
+['preBP','postBP'].forEach(id=>{
+ const el=$(id);el.addEventListener('input',()=>formatBP(el));el.addEventListener('paste',()=>setTimeout(()=>formatBP(el),0));
+});
+$('sessionForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ const obj={id:$('editId').value||String(Date.now())};fields.forEach(f=>obj[f]=$(f).value.trim());
+ if(!obj.date){toast('Please enter a date.');return}
+ const ix=sessions.findIndex(s=>s.id===obj.id);if(ix>=0)sessions[ix]=obj;else sessions.push(obj);
+ sessions.sort((a,b)=>(b.date||'').localeCompare(a.date||''));save();toast(ix>=0?'Session updated':'Session saved');showPage('sessions');
+});
+function editSession(id){
+ const s=sessions.find(x=>x.id===id);if(!s)return;
+ $('editId').value=s.id;$('formTitle').textContent='Edit session';fields.forEach(f=>$(f).value=s[f]||'');showPage('form');
+}
+function deleteSession(id){
+ if(confirm('Delete this session?')){sessions=sessions.filter(s=>s.id!==id);save();renderSessions();renderRecent();toast('Session deleted')}
+}
+window.editSession=editSession;window.deleteSession=deleteSession;
+
+function renderRecent(){
+ const a=sessions.slice(0,5);
+ $('recent').innerHTML=a.length?a.map(s=>`<div class="row" style="padding:9px 0;border-bottom:1px solid #eee"><span><b>${s.date||'—'}</b><br><span class="muted">${s.preBP||'—'} → ${s.postBP||'—'}</span></span><button class="secondary" type="button" onclick="editSession('${s.id}')">Edit</button></div>`).join(''):'<p class="muted">No sessions recorded yet.</p>';
+}
+function renderSessions(){
+ $('rows').innerHTML=sessions.length?sessions.map(s=>`<tr><td>${s.date||'—'}</td><td>${s.preWeight||'—'}</td><td>${s.preBP||'—'}</td><td>${s.postBP||'—'}</td><td>${s.actualFluid||'—'}</td><td><div class="actions"><button class="secondary" type="button" onclick="editSession('${s.id}')">Edit</button><button class="secondary danger" type="button" onclick="deleteSession('${s.id}')">Delete</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No sessions recorded.</td></tr>';
+}
+function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:null}
+function sys(v){const m=(v||'').match(/^(\\d{2,3})\\/(\\d{2,3})$/);return m?Number(m[1]):null}
+function average(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function renderStats(){
+ const pre=sessions.map(s=>num(s.preWeight)).filter(x=>x!==null),fluid=sessions.map(s=>num(s.actualFluid)).filter(x=>x!==null),bp=sessions.map(s=>sys(s.postBP)).filter(x=>x!==null);
+ $('statBox').innerHTML=`<div><span class="muted">Sessions</span><b>${sessions.length}</b></div><div><span class="muted">Average pre-weight</span><b>${average(pre)?.toFixed(1)??'—'} kg</b></div><div><span class="muted">Average actual fluid</span><b>${average(fluid)?.toFixed(2)??'—'} L</b></div><div><span class="muted">Average post systolic</span><b>${average(bp)?.toFixed(0)??'—'}</b></div>`;
+ draw('bpChart',s=>sys(s.preBP),s=>sys(s.postBP),'Pre systolic','Post systolic');
+ draw('weightChart',s=>num(s.preWeight),s=>num(s.dryWeight),'Pre-weight','Dry weight');
+ draw('fluidChart',s=>num(s.targetFluid),s=>num(s.actualFluid),'Targeted','Actual');
+}
+function draw(id,a,b,la,lb){
+ const c=$(id),ctx=c.getContext('2d'),w=c.clientWidth,h=c.clientHeight,d=devicePixelRatio||1;
+ c.width=w*d;c.height=h*d;ctx.setTransform(d,0,0,d,0,0);
+ const data=sessions.slice().reverse(),vals=data.flatMap(s=>[a(s),b(s)]).filter(x=>x!==null);
+ ctx.clearRect(0,0,w,h);
+ if(!vals.length){ctx.font='14px sans-serif';ctx.fillText('No chart data yet',15,30);return}
+ const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,p=36;
+ ctx.strokeStyle='#d7e0e7';ctx.beginPath();ctx.moveTo(p,10);ctx.lineTo(p,h-30);ctx.lineTo(w-10,h-30);ctx.stroke();
+ function line(fn){
+  ctx.beginPath();let started=false;
+  data.forEach((s,i)=>{const v=fn(s);if(v===null)return;const x=p+(data.length<2?0:(w-p-15)*i/(data.length-1)),y=10+(max-v)/range*(h-40);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y)});
+  if(started)ctx.stroke();
+ }
+ line(a);line(b);ctx.fillStyle='#425866';ctx.font='12px sans-serif';ctx.fillText(la,10,h-11);ctx.fillText(lb,100,h-11);
+}
+$('exportBtn').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify({app:'D-Track',version:1,exported:new Date().toISOString(),sessions},null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='D-Track-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+$('importBtn').addEventListener('click',()=>$('fileInput').click());
+$('fileInput').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const obj=JSON.parse(await f.text());if(!obj||!Array.isArray(obj.sessions))throw new Error('Invalid');
+  sessions=obj.sessions.filter(x=>x&&x.id);sessions.sort((a,b)=>(b.date||'').localeCompare(a.date||''));save();renderSessions();renderRecent();toast('Backup imported');
+ }catch(err){toast('That backup file could not be imported.')}e.target.value='';
+});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+$('date').value=today();renderRecent();
+})();
+</script>
+</body>
+</html>
