@@ -179,7 +179,7 @@ function renderSessions(){
  $('rows').innerHTML=sessions.length?sessions.map(s=>`<tr><td>${s.date||'—'}</td><td>${s.preWeight||'—'}</td><td>${s.preBP||'—'}</td><td>${s.postBP||'—'}</td><td>${s.actualFluid||'—'}</td><td><div class="actions"><button class="secondary" type="button" onclick="editSession('${s.id}')">Edit</button><button class="secondary danger" type="button" onclick="deleteSession('${s.id}')">Delete</button></div></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No sessions recorded.</td></tr>';
 }
 function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:null}
-function sys(v){const m=(v||'').match(/^(\\d{2,3})\\/(\\d{2,3})$/);return m?Number(m[1]):null}
+function sys(v){const m=(v||'').match(/^(\d{2,3})\/(\d{2,3})$/);return m?Number(m[1]):null}
 function average(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
 function renderStats(){
  const pre=sessions.map(s=>num(s.preWeight)).filter(x=>x!==null),fluid=sessions.map(s=>num(s.actualFluid)).filter(x=>x!==null),bp=sessions.map(s=>sys(s.postBP)).filter(x=>x!==null);
