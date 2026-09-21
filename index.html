@@ -146,8 +146,10 @@ $('addBtn').addEventListener('click',()=>newSession());
 $('cancelBtn').addEventListener('click',()=>showPage('home'));
 
 function newSession(){
+ 
  $('sessionForm').reset();$('editId').value='';$('formTitle').textContent='New session';$('date').value=today();showPage('form');
 }
+ 
 function formatBP(el){
  let d=el.value.replace(/\D/g,'').slice(0,5);
  el.value=d.length>3?d.slice(0,3)+'/'+d.slice(3):d;
