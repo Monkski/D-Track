@@ -63,35 +63,47 @@ body{
 }
 
 header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  overflow:hidden;
 
   background:
-
     radial-gradient(circle at 80% 20%,rgba(255,255,255,.22),transparent 25%),
-
     linear-gradient(135deg,#294873,#183458 55%,#1c6b7b);
 
   color:#fff;
-
   padding:15px 16px calc(13px + env(safe-area-inset-top));
-
-  position:sticky;
-
-  top:0;
-
-  z-index:10;
-
-  overflow:hidden
-
 }
 
-header h1{
+header::after{
+  content:"";
+  position:absolute;
+  right:-8px;
+  top:-18px;
+  width:170px;
+  height:140px;
+  background:url("branch-teal.svg") right top / contain no-repeat;
+  opacity:.42;
+  pointer-events:none;
+}
 
-  margin:0;
+header::before{
+  content:"";
+  position:absolute;
+  left:-35px;
+  bottom:-48px;
+  width:125px;
+  height:125px;
+  background:url("branch-coral.svg") left bottom / contain no-repeat;
+  opacity:.28;
+  pointer-events:none;
+}
 
-  font-size:24px;
-
-  letter-spacing:.04em
-
+header h1,
+header .sub{
+  position:relative;
+  z-index:1;
 }
 
 .sub{
@@ -465,7 +477,22 @@ canvas{
   z-index:30
 
 }
+.card{
+  position:relative;
+  overflow:hidden;
+}
 
+.card::after{
+  content:"";
+  position:absolute;
+  right:-35px;
+  bottom:-45px;
+  width:145px;
+  height:95px;
+  background:url("corner-motif.svg") right bottom / contain no-repeat;
+  opacity:.10;
+  pointer-events:none;
+}
 @media(max-width:480px){
 
   .grid{
